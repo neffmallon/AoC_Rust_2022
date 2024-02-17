@@ -1,6 +1,4 @@
-use std::collections::HashSet;
 use crate::general_helpers::read_day_input_lines;
-use std::cmp::Ordering;
 
 
 const DAY: u8 = 10;
