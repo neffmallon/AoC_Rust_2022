@@ -48,6 +48,52 @@ pub(crate) fn part_1() {
     println!("Day {DAY} part 1: {}",final_sum);
 }
 
+fn draw_pix(cycle: &i32, x: &i32)-> bool{
+    if cycle > &240 {return false}
+    return ((cycle - 1)%40 - x).abs() <= 1
+}
+
 pub(crate) fn part_2() {
-    println!("Day {DAY} part 2: incomplete");
+    let mut x = 1;
+    let mut cycle_count = 1;
+    let mut display = vec![vec![' ';40];6];
+
+    if let Ok(lines) = read_day_input_lines(DAY) {
+        for line in lines.flatten() {
+            if line.trim() == "noop"{
+                // cycle start
+                if draw_pix(&cycle_count, &x){
+                    display[((cycle_count-1)/40i32) as usize][((cycle_count - 1)%40) as usize] = '#';
+                }
+                cycle_count += 1; // cycle end
+            } else if &line.trim()[0..4] =="addx"{
+                // cycle start
+                if draw_pix(&cycle_count, &x){
+                    display[((cycle_count-1)/40i32) as usize][((cycle_count - 1)%40) as usize] = '#';
+                }
+                cycle_count += 1;// cycle end
+                // cycle start
+                if draw_pix(&cycle_count, &x){
+                    display[((cycle_count-1)/40i32) as usize][((cycle_count - 1)%40) as usize] = '#';
+                }
+                cycle_count += 1; // cycle end
+                let n =  match line.trim()
+                    .split_at(line.find(" ").unwrap()).1.trim()
+                    .parse::<i32>()
+                { Ok(num) => num,
+                Err(_) => {
+                    println!("{}", line);
+                    panic!()
+                },};
+                x += n;
+            }
+        if cycle_count > 240{break}
+        }
+    }
+    for d in display.iter(){
+        println!("{}",d
+            .iter()
+            .collect::<String>()
+        )
+    }
 }
