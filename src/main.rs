@@ -7,10 +7,10 @@ mod general_helpers;
 // mod day_5;
 // mod day_6;
 // mod day_7;
-//mod day_8;
-mod day_9;
+// mod day_8;
+mod day_10;
 
-use day_9::{part_1,part_2};
+use day_10::{part_1,part_2};
 
 fn main(){
 part_1();
