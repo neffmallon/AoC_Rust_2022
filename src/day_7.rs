@@ -1,7 +1,7 @@
 use std::collections::HashMap;
-use std::ops::Index;
+
 use crate::general_helpers::read_day_input_lines;
-use std::time::Instant;
+
 
 
 const DAY: u8 = 7;
@@ -10,7 +10,7 @@ const DAY: u8 = 7;
 // "cd <dir_name>", "dir <dir_name>", <size> <filename>
 // I have given up for now on constructing my own DAG
 
-fn full_dir_name(v: &Vec<String>) -> String{
+fn full_dir_name(v: &[String]) -> String{
     v.join("-").clone()
 }
 
@@ -38,7 +38,7 @@ pub(crate) fn part_1() {
                     current_dirs.push(target_dir_name.trim().to_string())
                 }
             } else {
-                let (file_size_str, _) = line.trim().split_at(line.find(" ").unwrap());
+                let (file_size_str, _) = line.trim().split_at(line.find(' ').unwrap());
                 let file_size: u64 = match file_size_str.trim().parse::<u64>() {
                             Ok(num)=>num,
                             Err(_) => {
@@ -48,7 +48,7 @@ pub(crate) fn part_1() {
                         };
                 for end_idx in 0..current_dirs.len(){
                     // println!("Current Directories! '{}'", dir_name);
-                    all_dirs_sizes.entry(full_dir_name(&current_dirs[0..(end_idx+1)].to_vec()))
+                    all_dirs_sizes.entry(full_dir_name(&current_dirs[0..(end_idx+1)]))
                         .and_modify(|s| *s += file_size)
                         .or_insert(file_size);
                 }
@@ -56,7 +56,7 @@ pub(crate) fn part_1() {
         }
     }
     let mut sum_small_directories: u64 = 0;
-    for (key, value) in &all_dirs_sizes{
+    for value in all_dirs_sizes.values(){
         if *value <= 100000{
             sum_small_directories += value
         }
@@ -68,11 +68,10 @@ pub(crate) fn part_1() {
     let needed_size = 30000000 - (70000000 - all_dirs_sizes.get("/").unwrap()) ;
     let mut smallest_dir_size = all_dirs_sizes.get("/").unwrap();
 
-    for (key, value) in &all_dirs_sizes{
+    for value in all_dirs_sizes.values(){
         if (value < smallest_dir_size) & (value >= &needed_size) {
             smallest_dir_size = value
         }
-        // println!("Day {DAY} dir '{}': {}",key, value)
     }
 
     println!("Day {DAY} part 2: smallest directory with needed space: {}",smallest_dir_size);

@@ -19,10 +19,10 @@ struct Monkey{
     inspect_count: usize,
 }
 
-fn read_monkey(monkey_lines: &Vec<String>)-> Monkey{
+fn read_monkey(monkey_lines: &[String])-> Monkey{
 
-    let item_string= monkey_lines[1].split(":").collect::<Vec<&str>>()[1];
-    let mut items = if item_string.contains(","){
+    let item_string= monkey_lines[1].split(':').collect::<Vec<&str>>()[1];
+    let items = if item_string.contains(','){
         item_string.trim().split(", ").collect::<Vec<&str>>().iter()
         .map(|s| s.trim().parse::<usize>().unwrap()).collect::<Vec<usize>>()
     } else {
@@ -37,13 +37,13 @@ fn read_monkey(monkey_lines: &Vec<String>)-> Monkey{
         op_type = OpType::Square;
         op_num = 1usize;
     }
-    else if monkey_lines[2].contains("*"){
+    else if monkey_lines[2].contains('*'){
         op_type = OpType::Mult;
-        op_num = monkey_lines[2].split("*").collect::<Vec<&str>>()[1].trim().parse::<usize>().unwrap();
+        op_num = monkey_lines[2].split('*').collect::<Vec<&str>>()[1].trim().parse::<usize>().unwrap();
     }
-    else if monkey_lines[2].contains("+") {
+    else if monkey_lines[2].contains('+') {
         op_type = OpType::Add;
-        op_num = monkey_lines[2].split("+").collect::<Vec<&str>>()[1].trim().parse::<usize>().unwrap();
+        op_num = monkey_lines[2].split('+').collect::<Vec<&str>>()[1].trim().parse::<usize>().unwrap();
     }
     else {panic!("Unknown Operation:'{}'", monkey_lines[2])};
     // println!("op num: {}", op_num);
@@ -65,7 +65,7 @@ fn read_monkey(monkey_lines: &Vec<String>)-> Monkey{
     }
 }
 
-fn process_monkeys(monkey_vector: &Vec<Monkey>, target_idx: usize) -> Vec<Monkey>{
+fn process_monkeys(monkey_vector: &[Monkey], target_idx: usize) -> Vec<Monkey>{
     let true_idx = monkey_vector[target_idx].true_idx;
     let false_idx = monkey_vector[target_idx].false_idx;
     let mut process_monkey = monkey_vector[target_idx].clone();
@@ -88,11 +88,11 @@ fn process_monkeys(monkey_vector: &Vec<Monkey>, target_idx: usize) -> Vec<Monkey
     process_monkey.items = vec![];
 
     let mut out_vec = vec![];
-    for i in 0..monkey_vector.len(){
+    for (i, monkey) in monkey_vector.iter().enumerate(){
         if i == target_idx {out_vec.push(process_monkey.clone())}
         else if i == true_idx { out_vec.push(true_monkey.clone())}
         else if i == false_idx { out_vec.push(false_monkey.clone())}
-        else {out_vec.push(monkey_vector[i].clone())}
+        else {out_vec.push(monkey.clone())}
     }
     out_vec
 
@@ -112,7 +112,7 @@ pub(crate) fn part_1() {
     }
     println!("All monkeys loaded!");
     // process the monkeys!
-    for round in 0..20{
+    for _round in 0..20{
         for idx in 0..monkeys.len(){
         monkeys = process_monkeys(&monkeys, idx)
         }
@@ -130,9 +130,9 @@ pub(crate) fn part_1() {
     }
 }
 
-fn process_mod_monkeys(monkey_vector: &Vec<Monkey>, target_idx: usize) -> Vec<Monkey>{
+fn process_mod_monkeys(monkey_vector: &[Monkey], target_idx: usize) -> Vec<Monkey>{
     let modulus = monkey_vector.iter()
-        .map(|m| m.test_num).fold(1, |res, a| res * a);
+        .map(|m| m.test_num).product::<usize>();
     let true_idx = monkey_vector[target_idx].true_idx;
     let false_idx = monkey_vector[target_idx].false_idx;
     let mut process_monkey = monkey_vector[target_idx].clone();
@@ -155,11 +155,11 @@ fn process_mod_monkeys(monkey_vector: &Vec<Monkey>, target_idx: usize) -> Vec<Mo
     process_monkey.items = vec![];
 
     let mut out_vec = vec![];
-    for i in 0..monkey_vector.len(){
+    for (i, monkey) in monkey_vector.iter().enumerate(){
         if i == target_idx {out_vec.push(process_monkey.clone())}
         else if i == true_idx { out_vec.push(true_monkey.clone())}
         else if i == false_idx { out_vec.push(false_monkey.clone())}
-        else {out_vec.push(monkey_vector[i].clone())}
+        else {out_vec.push(monkey.clone())}
     }
     out_vec
 
@@ -180,7 +180,7 @@ pub(crate) fn part_2() {
     }
     println!("All monkeys loaded!");
     // process the monkeys!
-    for round in 0..10000{
+    for _round in 0..10000{
         for idx in 0..monkeys.len(){
         monkeys = process_mod_monkeys(&monkeys, idx)
         }

@@ -11,7 +11,7 @@ fn check_for_dups(s: &str) ->bool{
             check_str.push(c)
         }
     }
-    return true
+    true
 }
 
 pub(crate) fn part_1() {

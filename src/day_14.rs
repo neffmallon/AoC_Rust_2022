@@ -7,15 +7,14 @@ const DAY: u8 = 14;
 // problem at https://adventofcode.com/2022/day/14
 
 fn split_tuple(s: &str)-> (usize, usize){
-    let vec: Vec<usize> = s.trim().split(",")
-        .into_iter()
+    let vec: Vec<usize> = s.trim().split(',')
         .map(|sub| sub.parse::<usize>().unwrap())
         .collect();
     (vec[0], vec[1])
 }
 
-fn wall_inst_to_vec_tuples(s: &String)-> Vec<(usize, usize)>{
-    s.split("->").into_iter().map(split_tuple).collect()
+fn wall_inst_to_vec_tuples(s: &str)-> Vec<(usize, usize)>{
+    s.split("->").map(split_tuple).collect()
 }
 
 fn find_cave_bounds()-> (usize, usize, usize){
@@ -32,7 +31,7 @@ fn find_cave_bounds()-> (usize, usize, usize){
             }
         }
     }
-    return (min_x, max_x, max_y)
+    (min_x, max_x, max_y)
 }
 
 fn build_infinite_cave_map(empty: &ColoredString, wall: &ColoredString, bounds: (usize, usize, usize)) -> Vec<Vec<ColoredString>>{
@@ -61,7 +60,7 @@ fn build_infinite_cave_map(empty: &ColoredString, wall: &ColoredString, bounds: 
             }
         }
     }
-    return cave_map
+    cave_map
 }
 
 fn build_finite_cave_map(empty: &ColoredString, wall: &ColoredString, bounds: (usize, usize, usize)) -> Vec<Vec<ColoredString>>{
@@ -92,7 +91,7 @@ fn build_finite_cave_map(empty: &ColoredString, wall: &ColoredString, bounds: (u
     }
     cave_map.push(vec![empty.clone();bounds.1-bounds.0+1]);
     cave_map.push(vec![wall.clone();bounds.1-bounds.0+1]);
-    return cave_map
+    cave_map
 }
 
 fn fill_with_sand(cave_map: &mut Vec<Vec<ColoredString>>, sand_start_idx: usize, empty: &ColoredString, sand: &ColoredString) -> u32 {
@@ -134,7 +133,7 @@ fn fill_with_sand(cave_map: &mut Vec<Vec<ColoredString>>, sand_start_idx: usize,
             }
         }
     }
-    return sand_count
+    sand_count
 }
 
 pub(crate) fn part_1() {
@@ -174,7 +173,7 @@ pub(crate) fn part_2() {
         for c in line[(wall_bounds.0 - bounds.0 - 1)..(2 + wall_bounds.1 - bounds.0)].iter(){
             print!("{}", c)
         }
-        print!("\n")
+        println!()
     }
     println!("Day {DAY} Part 2: {sand_count}");
 }

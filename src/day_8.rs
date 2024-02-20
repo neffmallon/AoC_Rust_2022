@@ -14,7 +14,7 @@ fn get_forest_size()->(usize, usize){
             if n_cols == 0{ n_cols = line.trim().len() }
         }
     }
-    return (n_lines, n_cols)
+    (n_lines, n_cols)
 }
 
 pub(crate) fn part_1() {
@@ -23,10 +23,8 @@ pub(crate) fn part_1() {
     let mut visible = vec![vec![0u32;n_cols];n_lines];
     // read in forest values:
     if let Ok(lines) = read_day_input_lines(DAY) {
-        let mut row_num = 0;
-        for line in lines.flatten() {
+        for (row_num, line) in lines.flatten().enumerate() {
             forest[row_num] = line.trim().chars().map(|c| c.to_digit(10).unwrap() as i16).collect();
-            row_num+=1;
         }
     }
     let frozen_forest = &forest;
@@ -41,7 +39,7 @@ pub(crate) fn part_1() {
             }
             if tree > &tallest_col_trees[col_idx]{
                 visible[row_idx][col_idx] = 1;
-                tallest_col_trees[col_idx] = tree.clone();
+                tallest_col_trees[col_idx] = *tree;
             }
         }
     }
@@ -58,7 +56,7 @@ pub(crate) fn part_1() {
             }
             if tree > &tallest_col_trees[new_col_idx]{
                 visible[new_row_idx][new_col_idx] = 1;
-                tallest_col_trees[new_col_idx] = tree.clone();
+                tallest_col_trees[new_col_idx] = *tree;
             }
         }
     }
@@ -66,10 +64,10 @@ pub(crate) fn part_1() {
     println!("Day {DAY} part 1: Total Visible Trees: {:?}",visible_count);
 }
 
-fn compute_score(forest: &Vec<Vec<i16>>, row: usize, col: usize)-> u64{
+fn compute_score(forest: &[Vec<i16>], row: usize, col: usize)-> u64{
     let n_lines = forest.len();
     let n_cols = forest[0].len();
-    if { ( n_cols == col + 1 ) || ( n_lines == row + 1 ) || ( col ==0 ) || (row==0)}{ return 0}
+    if ( n_cols == col + 1 ) || ( n_lines == row + 1 ) || ( col ==0 ) || (row==0){ return 0}
     let mut up_score = 0u64;
     let mut down_score = 0u64;
     let mut right_score = 0u64;
@@ -102,7 +100,7 @@ fn compute_score(forest: &Vec<Vec<i16>>, row: usize, col: usize)-> u64{
             break;
         }
     }
-    return up_score * down_score * left_score * right_score
+    up_score * down_score * left_score * right_score
 
 }
 pub(crate) fn part_2() {
@@ -111,10 +109,8 @@ pub(crate) fn part_2() {
     let mut scores = vec![vec![0u64;n_cols];n_lines];
     // read in forest values:
     if let Ok(lines) = read_day_input_lines(DAY) {
-        let mut row_num = 0;
-        for line in lines.flatten() {
+        for (row_num, line) in lines.flatten().enumerate() {
             forest[row_num] = line.trim().chars().map(|c| c.to_digit(10).unwrap() as i16).collect();
-            row_num+=1;
         }
     }
     for i in 1..(n_lines-1){
@@ -122,9 +118,9 @@ pub(crate) fn part_2() {
             scores[i][j] = compute_score(&forest, i, j)
         }
     }
-    let high_score = scores.iter()
-        .map(|v| v.iter().max().unwrap().clone())
+    let high_score = *scores.iter()
+        .map(|v| *v.iter().max().unwrap())
         .collect::<Vec<u64>>()
-        .iter().max().unwrap().clone();
+        .iter().max().unwrap();
     println!("Day {DAY} part 2: High Score: {:?}",high_score);
 }

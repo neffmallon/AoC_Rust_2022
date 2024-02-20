@@ -27,19 +27,19 @@ fn has_any_overlap(elfs: ElfPairs) -> bool {
     let end_in_two: bool = {
         elfs.elf_1_end >= elfs.elf_2_start } &
         { elfs.elf_1_end <= elfs.elf_2_end };
-    return has_complete_overlap(elfs) | start_in_two | end_in_two;
+    has_complete_overlap(elfs) | start_in_two | end_in_two
 }
 
-fn parse_elfs(l: &String) -> ElfPairs{
+fn parse_elfs(l: &str) -> ElfPairs{
     // string should be in the form 1-93,2-11
-    let elfs = l.split(",").collect::<Vec<&str>>();
-    let elf_1 = elfs[0].split("-").collect::<Vec<&str>>();
-    let elf_2 = elfs[1].split("-").collect::<Vec<&str>>();
+    let elfs = l.split(',').collect::<Vec<&str>>();
+    let elf_1 = elfs[0].split('-').collect::<Vec<&str>>();
+    let elf_2 = elfs[1].split('-').collect::<Vec<&str>>();
     ElfPairs {
-    elf_1_start: elf_1[0].parse().expect(&*format!("failed to convert {}", elf_1[0])),
-    elf_1_end: elf_1[1].parse().expect(&*format!("failed to convert {}", elf_1[1])),
-    elf_2_start: elf_2[0].parse().expect(&*format!("failed to convert {}", elf_2[0])),
-    elf_2_end: elf_2[1].parse().expect(&*format!("failed to convert {}", elf_2[1])),
+    elf_1_start: elf_1[0].parse().unwrap_or_else(|_| panic!("failed to convert {}", elf_1[0])),
+    elf_1_end: elf_1[1].parse().unwrap_or_else(|_| panic!("failed to convert {}", elf_1[1])),
+    elf_2_start: elf_2[0].parse().unwrap_or_else(|_| panic!("failed to convert {}", elf_2[0])),
+    elf_2_end: elf_2[1].parse().unwrap_or_else(|_| panic!("failed to convert {}", elf_2[1])),
 }
 }
 
@@ -47,7 +47,7 @@ pub(crate) fn part_1() {
     let mut contained_count:u32 =0;
     if let Ok(lines) = read_day_input_lines(DAY) {
         for line in lines.flatten(){
-            let elf_pair = parse_elfs(&line.trim().to_string());
+            let elf_pair = parse_elfs(line.trim());
             if has_complete_overlap(elf_pair){
                 contained_count +=1
             }
@@ -60,7 +60,7 @@ pub(crate) fn part_2() {
         let mut contained_count:u32 =0;
     if let Ok(lines) = read_day_input_lines(DAY) {
         for line in lines.flatten(){
-            let elf_pair = parse_elfs(&line.trim().to_string());
+            let elf_pair = parse_elfs(line.trim());
             if has_any_overlap(elf_pair){
                 contained_count +=1
             }

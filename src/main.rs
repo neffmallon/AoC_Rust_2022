@@ -1,4 +1,5 @@
 // Solutions to Advent of Code 2022
+// #![allow(dead_code, clippy::type_complexity)]
 mod general_helpers;
 mod day_15;
 

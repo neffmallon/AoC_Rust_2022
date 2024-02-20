@@ -26,11 +26,11 @@ pub(crate) fn part_1() {
     }
 }
 
-fn two_string_overlap<'a>(a: &'a String, b:&'a String) -> String {
+fn two_string_overlap(a: &str, b: &str) -> String {
     let mut overlap_str = String::new();
     for thing in a.chars(){
         if b.contains(thing){
-            overlap_str = format!("{}{}", overlap_str.to_string(), thing.to_string())
+            overlap_str = format!("{}{}", overlap_str, thing)
         }
     }
     overlap_str

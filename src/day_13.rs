@@ -4,14 +4,13 @@ use crate::general_helpers::read_day_input_lines;
 const DAY: u8 = 13;
 // problem at https://adventofcode.com/2022/day/13
 
-fn get_closure_index(s: &String) -> usize{
+fn get_closure_index(s: &str) -> usize{
     // Get the index of the string where the '[' in the first position closes.
     // string must start with '['. Find the matching ']'
-    let mut closure_state = 0u16;
     let mut current_idx = 0usize;
-    if s.as_bytes()[0usize] as char != '['{
+    let mut closure_state = if s.as_bytes()[0usize] as char != '['{
         panic!("String must start with '[' to find closure index.")
-    } else {closure_state = 1u16;}
+    } else {1u16};
 
     while closure_state > 0{
         current_idx += 1;
@@ -19,15 +18,16 @@ fn get_closure_index(s: &String) -> usize{
         else if s.as_bytes()[current_idx] as char == ']'{closure_state -= 1}
     }
 
-    return current_idx
+    current_idx
 }
 
-fn parse_elements(str_to_parse: &String) -> Vec<String>{
-    /// Turn the passed string into a vec of strings, one for each element in the top most list
+/// Turn the passed string into a vec of strings, one for each element in the top most list
+fn parse_elements(str_to_parse: &str) -> Vec<String>{
+
     // if s does not start with '[' then it must be a single number.
     // if that's the case, return the number in a vec
-    if !str_to_parse.contains("["){
-        return vec![str_to_parse.clone()]
+    if !str_to_parse.contains('['){
+        return vec![str_to_parse.to_string().clone()]
     }
     let mut out: Vec<String> = Vec::new();
     let mut keep_going = true;
@@ -36,12 +36,12 @@ fn parse_elements(str_to_parse: &String) -> Vec<String>{
     let eos = s.len();
 
     while keep_going{
-        let search_s = s[current_idx..eos].into_iter().map(|n| *n as char).collect::<String>();
+        let search_s = s[current_idx..eos].iter().map(|n| *n as char).collect::<String>();
         let mut ci = 0usize;
         if s[current_idx] as char == '[' {
             ci = get_closure_index(&search_s) + 1;
-        } else if search_s.contains(",") {
-            ci = search_s.find(",").unwrap();
+        } else if search_s.contains(',') {
+            ci = search_s.find(',').unwrap();
         } else { // we should only get here if we are at the last element
             ci = search_s.len() - 1;
         }
@@ -51,17 +51,17 @@ fn parse_elements(str_to_parse: &String) -> Vec<String>{
         current_idx +=  ci + 1;
         if current_idx >= eos { keep_going = false}
     }
-    return if out == vec![""] { vec![] } else { out }
+    if out == vec![""] { vec![] } else { out }
 }
 
-fn compare_packets(lhs: &String, rhs: &String)-> Ordering{
-    /// Compare the ordering of the packets in the lhs and rhs
+/// Compare the ordering of the packets in the lhs and rhs
+fn compare_packets(lhs: &str, rhs: &str)-> Ordering{
     let lh_compare = parse_elements(lhs);
     let rh_compare = parse_elements(rhs);
     let max_iter = min(lh_compare.len(), rh_compare.len());
 
     for idx in 0..max_iter{
-        if lh_compare[idx].contains("[") || rh_compare[idx].contains("["){
+        if lh_compare[idx].contains('[') || rh_compare[idx].contains('['){
             match compare_packets(&lh_compare[idx], &rh_compare[idx]){
                 Ordering::Equal => continue,
                 Ordering::Less => return Ordering::Less,
@@ -77,7 +77,7 @@ fn compare_packets(lhs: &String, rhs: &String)-> Ordering{
         }
     }
 
-    return lh_compare.len().cmp(&rh_compare.len())
+    lh_compare.len().cmp(&rh_compare.len())
 }
 
 pub(crate) fn part_1() {
@@ -90,10 +90,7 @@ pub(crate) fn part_1() {
                 0 => lhs = line.clone(),
                 1 => {
                     let rhs = line.clone();
-                    match compare_packets(&lhs, &rhs){
-                        Ordering::Less => idx_sum += 1 + (line_num/3),
-                        _ =>{},
-                    }
+                    if compare_packets(&lhs, &rhs) == Ordering::Less { idx_sum += 1 + (line_num/3) }
                 },
                 2 => {},
                 _ => panic!()
@@ -111,7 +108,7 @@ pub(crate) fn part_2() {
     let mut current_six_less_two_idx = 1u32;
     if let Ok(lines) = read_day_input_lines(DAY) {
         for line in lines.flatten() {
-            if line.contains("["){
+            if line.contains('['){
                 match compare_packets(&line, &two){
                     Ordering::Less => current_two_idx += 1,
                     Ordering::Greater => {

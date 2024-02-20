@@ -9,7 +9,7 @@ fn check_cycle(x: &i32, cycle_count: &i32, next_cycle_check: &i32, final_sum: &i
         println!("{} added to total for a new sum of {}", x * cycle_count, final_sum + x * cycle_count);
         return (next_cycle_check + 40, final_sum + x * cycle_count)
     }
-    return (next_cycle_check.clone(), final_sum.clone())
+    (*next_cycle_check, *final_sum)
 }
 
 pub(crate) fn part_1() {
@@ -31,7 +31,7 @@ pub(crate) fn part_1() {
                 (next_cycle_check, final_sum) = check_cycle(&x, &cycle_count, &next_cycle_check, &final_sum);
                 cycle_count += 1; // cycle end
                 let n =  match line.trim()
-                    .split_at(line.find(" ").unwrap()).1.trim()
+                    .split_at(line.find(' ').unwrap()).1.trim()
                     .parse::<i32>()
                 { Ok(num) => num,
                 Err(_) => {
@@ -48,7 +48,7 @@ pub(crate) fn part_1() {
 
 fn draw_pix(cycle: &i32, x: &i32)-> bool{
     if cycle > &240 {return false}
-    return ((cycle - 1)%40 - x).abs() <= 1
+    ((cycle - 1)%40 - x).abs() <= 1
 }
 
 pub(crate) fn part_2() {
@@ -76,7 +76,7 @@ pub(crate) fn part_2() {
                 }
                 cycle_count += 1; // cycle end
                 let n =  match line.trim()
-                    .split_at(line.find(" ").unwrap()).1.trim()
+                    .split_at(line.find(' ').unwrap()).1.trim()
                     .parse::<i32>()
                 { Ok(num) => num,
                 Err(_) => {

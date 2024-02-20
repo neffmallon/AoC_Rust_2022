@@ -9,8 +9,8 @@ const DAY: u8 = 9;
 fn new_tail_position(h_i: i32, h_j: i32, t_i: i32, t_j: i32) -> (i32, i32){
     let mut new_i = t_i;
     let mut new_j = t_j;
-    if { ((h_i - t_i).abs() <= 1) & ((h_j - t_j).abs() <= 1) }{return (new_i, new_j)}
-    else if { ((h_i - t_i).abs() > 1) & ((h_j - t_j).abs() > 1) }{
+    if ((h_i - t_i).abs() <= 1) & ((h_j - t_j).abs() <= 1){return (new_i, new_j)}
+    else if ((h_i - t_i).abs() > 1) & ((h_j - t_j).abs() > 1){
         if h_i > t_i {new_i += 1} else {new_i -= 1};
         if h_j > t_j {new_j += 1} else {new_j -= 1};
         // panic!("Head is too far from tail!")
@@ -32,7 +32,7 @@ fn new_tail_position(h_i: i32, h_j: i32, t_i: i32, t_j: i32) -> (i32, i32){
         }
     }
 
-    return (new_i, new_j)
+    (new_i, new_j)
 }
 
 pub(crate) fn part_1() {
@@ -42,7 +42,7 @@ pub(crate) fn part_1() {
     tail_visited.insert((tail_i, tail_j));
     if let Ok(lines) = read_day_input_lines(DAY) {
         for line in lines.flatten() {
-            let (direction, distance) = line.trim().split_at(line.find(" ").unwrap());
+            let (direction, distance) = line.trim().split_at(line.find(' ').unwrap());
             for _ in 0..distance.trim().parse().unwrap(){
                 match direction {
                     "U" => head_j += 1,
@@ -61,12 +61,12 @@ pub(crate) fn part_1() {
 }
 
 pub(crate) fn part_2() {
-    let mut rope = vec![(0,0);10];
+    let mut rope = [(0,0); 10];
     let mut tail_visited: HashSet<(i32, i32)> = HashSet::new();
     tail_visited.insert((rope[9].0, rope[9].1));
     if let Ok(lines) = read_day_input_lines(DAY) {
         for line in lines.flatten() {
-            let (direction, distance) = line.trim().split_at(line.find(" ").unwrap());
+            let (direction, distance) = line.trim().split_at(line.find(' ').unwrap());
             for _ in 0..distance.trim().parse().unwrap(){
                 match direction {
                     "U" => rope[0].1 += 1,
@@ -77,7 +77,7 @@ pub(crate) fn part_2() {
                 }
                 for idx in 0..9 {
                     let (tail_i, tail_j) = new_tail_position(rope[idx].0, rope[idx].1, rope[idx+1].0, rope[idx+1].1);
-                    if { (tail_i == rope[idx + 1].0) & (tail_j == rope[idx + 1].1) } {
+                    if (tail_i == rope[idx + 1].0) & (tail_j == rope[idx + 1].1) {
                         break
                     } else {
                         rope[idx + 1].0 = tail_i;

@@ -1,4 +1,4 @@
-use std::ops::Index;
+
 use crate::general_helpers::read_day_input_lines;
 
 const DAY: u8 = 12;
@@ -38,12 +38,12 @@ pub(crate) fn part_1() {
     let mut active_searchers: Vec<(usize, usize)> = Vec::new();
     let mut end_loc = (0usize,0usize);
     for (idx, l) in map.iter().enumerate(){
-        if l.contains("S"){
-            distance[idx][l.find("S").unwrap()] = 0;
-            active_searchers.push((idx as usize, l.find("S").unwrap()))
+        if l.contains('S'){
+            distance[idx][l.find('S').unwrap()] = 0;
+            active_searchers.push((idx, l.find('S').unwrap()))
         }
-        if l.contains("E"){
-            end_loc = (idx,l.find("E").unwrap());
+        if l.contains('E'){
+            end_loc = (idx,l.find('E').unwrap());
         }
     }
     // set bounds
@@ -87,10 +87,10 @@ pub(crate) fn part_2() {
     let mut active_searchers: Vec<(usize, usize)> = Vec::new();
     let mut end_loc = (0usize,0usize);
     for (idx, l) in map.iter().enumerate(){
-        if l.contains("E"){
-            end_loc = (idx,l.find("E").unwrap());
-            distance[idx][l.find("E").unwrap()] = 0;
-            active_searchers.push((idx as usize, l.find("E").unwrap()))
+        if l.contains('E'){
+            end_loc = (idx,l.find('E').unwrap());
+            distance[idx][l.find('E').unwrap()] = 0;
+            active_searchers.push((idx, l.find('E').unwrap()))
         }
     }
     // set bounds
