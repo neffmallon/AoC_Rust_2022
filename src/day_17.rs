@@ -1,4 +1,4 @@
-use std::cmp::{min, max};
+use std::cmp::{max};
 
 use crate::general_helpers::read_day_input_lines;
 
@@ -151,13 +151,12 @@ pub(crate) fn part_1() {
     // cargo run --release takes 61 ms, but still 3.4 days for 1 trillion rocks
     let mut chamber: Vec<u8> = vec![0u8;310000];
     let mut top_of_rocks = 0usize;
-    let mut commands = vec!['a'];
+    let commands;
     let mut command_idx = 0usize;
     if let Ok(lines) = read_day_input_lines(DAY) {
-        for line in lines.flatten() {
+        if let Some(line) = lines.flatten().next() {
             commands = line.trim().chars().collect::<Vec<char>>();
-            break
-        }
+        } else {panic!("No inputs in file!")}
     } else {panic!("Some kind of error with reading the file")}
     let n_commands = commands.len();
     println!("n_commands: {n_commands}");
@@ -181,6 +180,16 @@ pub(crate) fn part_1() {
     println!("Day {DAY} Part 1: {}",top_of_rocks);
 }
 
+fn get_full_row_idx(chamber: &[u8], height: usize)-> Vec<u8>{
+    let mut idxs = vec![];
+    for (_, row) in chamber.iter().enumerate().take(height+1){
+        if *row == 0b0111_1111u8 {
+            idxs.push(*row)
+        }
+    }
+    idxs
+}
+
 pub(crate) fn part_2() {
     // Now the same thing, but one trillion blocks! There must be some kind of repeating pattern
     // or it wouldn't be possible.
@@ -188,13 +197,12 @@ pub(crate) fn part_2() {
     // 403 and 778 (which repeats at 3268).
     let mut chamber: Vec<u8> = vec![0u8;40000];
     let mut top_of_rocks = 0usize;
-    let mut commands = vec!['a'];
+    let commands;
     let mut command_idx = 0usize;
     if let Ok(lines) = read_day_input_lines(DAY) {
-        for line in lines.flatten() {
+        if let Some(line) = lines.flatten().next() {
             commands = line.trim().chars().collect::<Vec<char>>();
-            break
-        }
+        } else {panic!("No inputs in file!")}
     } else {panic!("Some kind of error with reading the file")}
     let n_commands = commands.len();
     println!("n_commands: {n_commands}");
@@ -216,7 +224,7 @@ pub(crate) fn part_2() {
                     rock_idx,
                     command_idx,
                     top_of_rocks,
-                    (&chamber[top_of_rocks-check_depth..top_of_rocks+1]).to_vec()
+                    (chamber[top_of_rocks-check_depth..top_of_rocks+1]).to_vec()
                 )
             } else if (n_repeats==0) & (top_of_rocks >= 3268) & (rock_idx % 5 == proposed_repeat.0%5) & (command_idx == proposed_repeat.1) {
                 let mut correct_count = 0;
@@ -247,5 +255,16 @@ pub(crate) fn part_2() {
             };
         }
     }
+    // This helped me find the repeat:
+    // let full_row_idxs = get_full_row_idx(&chamber, top_of_rocks);
+    // let full_row_dists: Vec<usize> = full_row_idxs.windows(2)
+    //     .map(|slice| slice[1] - slice[0]).collect();
+    //
+    // println!("{:?}",full_row_dists); // every 16 full rows, the pattern repeats
+    // let ps: usize = 2;
+    // println!("From row {} (diff {}) to row {} (diff {}) are {} rows apart",
+    //          full_row_idxs[ps],full_row_dists[ps],full_row_idxs[ps+16],full_row_dists[ps+16],
+    //      full_row_idxs[ps+16] - full_row_idxs[ps]
+    // );
     println!("Day {DAY} Part 2: {}", height_boost + top_of_rocks);
 }
