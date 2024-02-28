@@ -5,7 +5,7 @@ const DAY: u8 = 18;
 // problem at https://adventofcode.com/2022/day/18
 // Minecraft, basically
 
-const SIZE: usize = 28;
+const SIZE: usize = 25;
 
 fn read_ordered_pair(s: &str)->(usize, usize, usize){
     let v: Vec<usize> = s.split(',').map(|n| n.parse::<usize>().unwrap()).collect();
@@ -39,12 +39,12 @@ pub(crate) fn part_1() {
 
 fn count_neighbors_int(op: (usize, usize, usize), all_rocks: &[[[u8;SIZE];SIZE];SIZE]) -> u32{
     let mut out = 0;
-    if all_rocks[op.0 + 1][op.1][op.2] == 1 {out += 1}
-    if all_rocks[op.0][op.1 + 1][op.2] == 1 {out += 1}
-    if all_rocks[op.0][op.1][op.2 + 1] == 1 {out += 1}
-    if all_rocks[op.0 - 1][op.1][op.2] == 1 {out += 1}
-    if all_rocks[op.0][op.1 - 1][op.2] == 1 {out += 1}
-    if all_rocks[op.0][op.1][op.2 - 1] == 1 {out += 1}
+    if op.0 + 1 < SIZE {if all_rocks[op.0 + 1][op.1][op.2] == 1 {out += 1}}
+    if op.1 + 1 < SIZE {if all_rocks[op.0][op.1 + 1][op.2] == 1 {out += 1}}
+    if op.2 + 1 < SIZE {if all_rocks[op.0][op.1][op.2 + 1] == 1 {out += 1}}
+    if op.0 > 0 {if all_rocks[op.0 - 1][op.1][op.2] == 1 {out += 1}}
+    if op.1 > 0 {if all_rocks[op.0][op.1 - 1][op.2] == 1 {out += 1}}
+    if op.2 > 0 {if all_rocks[op.0][op.1][op.2 - 1] == 1 {out += 1}}
     return out
 }
 
@@ -74,25 +74,40 @@ pub(crate) fn part_2() {
             surface_area -= count_neighbors_int(op, &all_rocks)*2;
         }
     }
+    println!("Day {DAY} Part 2 surface area {surface_area}");
     // Now we visit all the places that are outside of the rocks and turn them to rock too lol
     let mut places_to_see: VecDeque<(usize, usize, usize)> = VecDeque::new();
     places_to_see.push_back((0usize,0usize,0usize));
     places_to_see.push_back((SIZE-1,SIZE-1,SIZE-1));
     while places_to_see.len() > 0{
         let place = places_to_see.pop_front().unwrap();
-        places_to_see.append(&mut color_neighbors_int(place, &mut all_rocks))
+        places_to_see.extend(&mut color_neighbors_int(place, &mut all_rocks).into_iter())
     }
     // now we build a new map from just the places where the old map is 0;
     let mut pocket_surface_area = 0u32;
     for i in 0..SIZE {
         for j in 0..SIZE {
             for k in 0..SIZE {
-                if all_rocks[i][k][j] == 0 {
+                if all_rocks[i][j][k] == 0 {
                     pocket_surface_area += count_neighbors_int((i, j, k), &all_rocks);
                 }
             }
         }
     }
+    println!("Day {DAY} Part 2 surface area by counting things adjasent to 0 spaces {pocket_surface_area}");
+    // this didn't work, maybe let's try counting surface area from the outside?
+    println!("Day {DAY} Part 2 subtract pocket area: {}", surface_area-pocket_surface_area);
 
-    println!("Day {DAY} Part 2: {}", surface_area-pocket_surface_area); //2624 is too high
+    let mut outside_surface_area = 0u32;
+    for i in 0..SIZE {
+        for j in 0..SIZE {
+            for k in 0..SIZE {
+                if all_rocks[i][j][k] == 2 {
+                    outside_surface_area += count_neighbors_int((i, j, k), &all_rocks);
+                }
+            }
+        }
+    }
+    println!("Day {DAY} Part 2 calc steam area: {}", outside_surface_area);
+    // I had just reversed the j and the k in my indexing. WOW
 }
