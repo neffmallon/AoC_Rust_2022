@@ -37,8 +37,8 @@ fn coerce_destination(current_idx: i64, instruction: i64, length: i64)->i64{
         println!("inst: {instruction}, destination: {destination_idx}")
     }
     destination_idx =  if destination_idx < 0 {
-        length + destination_idx - 1
-    } else { destination_idx + 1 - length};
+        (destination_idx.abs()/(length - 1))*(length - 1) + destination_idx
+    } else { destination_idx + (1 - length) * (destination_idx/(length - 1))};
 
     while destination_idx < 0 || destination_idx >= length{
       destination_idx =  if destination_idx < 0 {destination_idx + length - 1}
