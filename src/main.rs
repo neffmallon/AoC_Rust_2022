@@ -1,9 +1,9 @@
 // Solutions to Advent of Code 2022
 // #![allow(dead_code, clippy::type_complexity)]
 mod general_helpers;
-mod day_22;
+mod day_23;
 
-use day_22::{part_1,part_2};
+use day_23::{part_1,part_2};
 
 fn main(){
 part_1();
