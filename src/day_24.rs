@@ -152,7 +152,8 @@ fn run_checks(
     mut_vec: &mut Vec<Location>,
     bliz: &Bliz,
     time_map:&mut [Vec<Vec<u32>>],
-    max_loc: &Location
+    max_loc: &Location,
+    end_loc: &Location,
 ) -> bool{
     let time_idx = ((current_turn-1) % time_map.len() as u32) as usize;
     for loc in iter_slice.iter() {
@@ -166,7 +167,7 @@ fn run_checks(
                     } else {  // If we are snow free, mark the spot with the turn number
                         time_map[time_idx][d.row][d.col] = current_turn;
                         mut_vec.push(d.clone());
-                        if d == max_loc {return true}
+                        if d == end_loc {return true}
                     }
                 }
             }
@@ -175,27 +176,28 @@ fn run_checks(
 }
 
 
-fn get_length_min_path()->u32{
+fn get_length_min_path(bliz: &mut Bliz, forward: bool)->u32{
     let (rows, cols, duration) = get_dimensions();
     let max_loc = Location{row:rows-1, col:cols-1};
-    let mut bliz = read_input();
+    let end = if forward{max_loc.clone()} else {Location{row:0, col:0}};
+    let start = if !forward{max_loc.clone()} else {Location{row:0, col:0}};
     let mut time_map: Vec<Vec<Vec<u32>>> = vec![vec![vec![0;cols];rows];duration];
     let mut current_turn = 1u32;
     let mut even_check = vec![];
     let mut odd_check = vec![];
     'outer: loop {
         // move all the snow!
-        rotate_bliz(&mut bliz, 1);
+        rotate_bliz(bliz, 1);
         let time_idx = ((current_turn-1) % duration as u32) as usize;
         // check to see if the starting square is open. If so, start another path there
-        if time_map[time_idx][0][0] == 0{
-            if is_not_clear(&bliz, 0, 0){
-                time_map[time_idx][0][0] = WALL;
-                if current_turn%2 == 0{
-                    odd_check.push(Location{row:0, col:0})
-                } else {even_check.push(Location{row:0, col:0})}
+        if time_map[time_idx][start.row][start.col] == 0{
+            if is_not_clear(bliz, start.row, start.col){
+                time_map[time_idx][start.row][start.col] = WALL;
             } else {
-                time_map[time_idx][0][0] == current_turn;
+                time_map[time_idx][start.row][start.col] == current_turn;
+                if current_turn%2 == 0{
+                    odd_check.push(start.clone())
+                } else {even_check.push(start.clone())}
             }
         };
         // check each of the destinations from last time to see if there is anywhere to move to
@@ -205,9 +207,10 @@ fn get_length_min_path()->u32{
                 current_turn,
                 &even_check,
                 &mut odd_check,
-                &bliz,
+                bliz,
                 &mut time_map,
                 &max_loc,
+                &end,
             );
             even_check.clear()
         } else {
@@ -215,34 +218,29 @@ fn get_length_min_path()->u32{
                 current_turn,
                 &odd_check,
                 &mut even_check,
-                &bliz,
+                bliz,
                 &mut time_map,
                 &max_loc,
+                &end,
             );
             odd_check.clear();
         };
         if pls_brk{break 'outer}
         current_turn += 1
     }
+    rotate_bliz(bliz, 1);
     return current_turn+1
 }
 
 pub(crate) fn part_1() {
-    // let mut bliz = read_input();
-    // println!("{bliz}");
-    // rotate_bliz(&mut bliz, 1);
-    // println!("======== Minute 1 ========");
-    // println!("{bliz}");
-    // let mut mut_bliz = bliz.clone();
-    // rotate_bliz(&mut mut_bliz, 12);
-    // assert_eq!(bliz, mut_bliz);
-    println!("Day {DAY} Part 1: {}", get_length_min_path()); //322
+    let mut bliz = read_input();
+    println!("Day {DAY} Part 1: {}", get_length_min_path(&mut bliz, true)); //322
 }
 
 pub(crate) fn part_2() {
-    if let Ok(lines) = read_day_input_lines(DAY) {
-        for _line in lines.flatten() {
-        }
-    }
-    println!("Day {DAY} Part 2: incomplete");
+    let mut bliz = read_input();
+    let mut total_minutes = get_length_min_path(&mut bliz, true);
+    total_minutes += get_length_min_path(&mut bliz, false);
+    total_minutes += get_length_min_path(&mut bliz, true);
+    println!("Day {DAY} Part 2: {total_minutes}");
 }
