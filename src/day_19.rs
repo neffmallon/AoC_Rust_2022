@@ -1,7 +1,7 @@
 use std::cmp::{max, Ordering};
 use regex::Regex;
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use rand::{Rng, thread_rng};
 use rand::distributions::WeightedIndex;
 use rand::distributions::Distribution;
@@ -123,29 +123,25 @@ enum Robots{
     Geo,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
 struct State{
     turn: u32,
+    resources: Resources,
+    bots: Resources,
+}
+
+#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
+struct Resources {
     ore: u32,
     cly: u32,
     obs: u32,
     geo: u32,
-    r_ore: u32,
-    r_cly: u32,
-    r_obs: u32,
-    r_geo: u32,
 }
 
 const START: State = State{
     turn: 0,
-    ore: 0,
-    cly: 0,
-    obs: 0,
-    geo: 0,
-    r_ore: 1,
-    r_cly: 0,
-    r_obs: 0,
-    r_geo: 0,
+    resources: Resources{ore:0,cly:0,obs:0,geo:0},
+    bots: Resources{ore:1,cly:0,obs:0,geo:0},
 };
 
 fn read_blueprint(s: &str)-> Blueprint{
@@ -181,65 +177,111 @@ fn ints_to_bots(v: &[u8])-> Vec<Robots>{
     out
 }
 
-fn collect_resources(state: &mut State){
-    state.geo += state.r_geo;
-    state.cly += state.r_cly;
-    state.ore += state.r_ore;
-    state.obs += state.r_obs;
+fn spend_resources(state: &mut State, blueprint: &Blueprint, bot: u8){
+        match bot{
+        0 => state.resources.ore -= blueprint.ore_cost,
+        1 => state.resources.ore -= blueprint.cly_cost,
+        2 => {state.resources.ore -= blueprint.obs_ore_cost; state.resources.cly -= blueprint.obs_cly_cost},
+        3 => {state.resources.ore -= blueprint.geo_ore_cost; state.resources.obs -= blueprint.geo_obs_cost},
+        _ => panic!("Not a bot!")
+    }
 }
 
-fn buy_bots(state: &mut State, bot_vec: &[u32;4]){
-    state.r_ore += bot_vec[0];
-    state.r_cly += bot_vec[1];
-    state.r_obs += bot_vec[2];
-    state.r_geo += bot_vec[3];
+fn collect_resources(state: &mut State){
+    state.resources.ore += state.bots.ore;
+    state.resources.cly += state.bots.cly;
+    state.resources.obs += state.bots.obs;
+    state.resources.geo += state.bots.geo;
+    state.turn += 1;
 }
+
+fn buy_bot(state: &mut State, bot: u8){
+    match bot{
+        0 => state.bots.ore += 1,
+        1 => state.bots.cly += 1,
+        2 => state.bots.obs += 1,
+        3 => state.bots.geo += 1,
+        _ => panic!("Not a bot!")
+    }
+}
+
+fn check_resources(state: &State, blueprint: &Blueprint, bot: u8)-> bool{
+    if state.turn == 23{ return false };
+    if state.turn == 22 && bot < 3 { return false };
+    if state.turn == 21 && bot < 2 { return false };
+    if state.turn == 20 && bot < 1 { return false };
+    let max_ore = *[
+        blueprint.ore_cost, blueprint.cly_cost, blueprint.obs_ore_cost, blueprint.geo_ore_cost
+    ].iter().max().unwrap();
+    match bot{
+        0 => state.bots.ore < max_ore && state.resources.ore >= blueprint.ore_cost,
+        1 => state.bots.cly < blueprint.obs_cly_cost && state.resources.ore >= blueprint.cly_cost,
+        2 => state.resources.ore >= blueprint.obs_ore_cost && state.resources.cly >= blueprint.obs_cly_cost,
+        3 => state.resources.ore >= blueprint.geo_ore_cost && state.resources.obs >= blueprint.geo_obs_cost,
+        _ => panic!("Not a bot!")
+    }
+}
+
+fn make_next_possible_bots(state: &State, blueprint: &Blueprint)-> Vec<State> {
+    let mut wait_state = state.clone();
+    collect_resources(&mut wait_state);
+    let mut out = vec![wait_state];
+
+    for bot in 0..4{
+        if check_resources(state, blueprint, bot){
+            let mut new_state = state.clone();
+            spend_resources(&mut new_state, blueprint, bot);
+            collect_resources(&mut new_state);
+            buy_bot(&mut new_state, bot);
+            out.push(new_state);
+        }
+    }
+    out
+}
+
 
 fn do_turn(state: &State, blueprint: &Blueprint, targets: &[Robots], purchase_idx: usize) -> (State, usize){
-    let mut bots_to_add = [0u32;4];
     let mut new_state = state.clone();
     let mut out_idx = purchase_idx;
     // buy a geode robot if at all possible
-    if (new_state.ore >= blueprint.geo_ore_cost) & (new_state.obs >= blueprint.geo_obs_cost){
-        bots_to_add[3] += 1;
-        new_state.ore -= blueprint.geo_ore_cost;
-        new_state.obs -= blueprint.geo_obs_cost;
-    } else {
-        while out_idx < targets.len(){
-            if (targets[out_idx] == Robots::Ore) &
-                (state.r_ore > max(max(max(blueprint.ore_cost, blueprint.cly_cost), blueprint.obs_ore_cost), blueprint.geo_ore_cost)){
-                out_idx += 1;
-            } else if (targets[out_idx] == Robots::Clay) & (state.r_cly >blueprint.obs_cly_cost){
-                out_idx += 1;
-            } else {break;}
+    if check_resources(&new_state, blueprint, 3){
+        spend_resources(&mut new_state, blueprint, 3);
+        collect_resources(&mut new_state);
+        buy_bot(&mut new_state, 3);
+        return if out_idx >= targets.len(){(new_state, out_idx)}
+        else if targets[out_idx] == Robots::Geo { (new_state, out_idx + 1) }
+        else { (new_state, out_idx) }
+    }
+    // if geo buy was unsuccessful:
+    // Check to see if we need to skip buying anything:
+    while out_idx < targets.len(){
+        if (targets[out_idx] == Robots::Ore) &
+            (state.bots.ore >= *[blueprint.ore_cost, blueprint.cly_cost, blueprint.obs_ore_cost, blueprint.geo_ore_cost].iter().max().unwrap()){
+            out_idx += 1;
+        } else if (targets[out_idx] == Robots::Clay) & (state.bots.cly >= blueprint.obs_cly_cost){
+            out_idx += 1;
+        } else {break;}
+    }
+    // we have already tried to buy a geode robot, so we only have anything left to try if
+    // there are still targets left.
+    if out_idx < targets.len(){
+        let bot: u8;
+        match targets[out_idx] {
+        Robots::Ore => bot=0,
+        Robots::Clay => bot=1,
+        Robots::Obsidian => bot=2,
+        Robots::Geo => bot=3,
         }
-        // we have already tried to buy a geode robot, so we only have anything left to try if
-        // there are still targets left.
-        if out_idx < targets.len(){
-                match targets[purchase_idx] {
-                Robots::Ore => if new_state.ore >= blueprint.ore_cost {
-                    bots_to_add[0] += 1;
-                    new_state.ore -= blueprint.ore_cost;
-                },
-                Robots::Clay => if new_state.ore >= blueprint.cly_cost {
-                    bots_to_add[1] += 1;
-                    new_state.ore -= blueprint.cly_cost;
-                },
-                Robots::Obsidian => if (new_state.ore >= blueprint.obs_ore_cost)
-                    & (new_state.cly >= blueprint.obs_cly_cost) {
-                    bots_to_add[2] += 1;
-                    new_state.ore -= blueprint.obs_ore_cost;
-                    new_state.cly -= blueprint.obs_cly_cost;
-                },
-                Robots::Geo => (),
-            }
+        if check_resources(&new_state, blueprint, bot) {
+             spend_resources(&mut new_state, blueprint, bot);
+             collect_resources(&mut new_state);
+             buy_bot(&mut new_state, bot);
+             return (new_state, out_idx + 1)
         }
     }
-    let purchase_count = (bots_to_add[0]+bots_to_add[1]+bots_to_add[2]+bots_to_add[3]) as usize;
+    // no bots to buy, so we just collect resources and increment the turn
     collect_resources(&mut new_state);
-    buy_bots(&mut new_state, &bots_to_add);
-    new_state.turn += 1;
-    return (new_state, purchase_idx+purchase_count)
+    return (new_state, purchase_idx)
 }
 
 fn run_simulation(blueprint: &Blueprint, organism: &Organism) -> u32{
@@ -249,7 +291,7 @@ fn run_simulation(blueprint: &Blueprint, organism: &Organism) -> u32{
     while state.turn < 24{
         (state, purchase_idx) = do_turn(&state, blueprint, &targets, purchase_idx);
     }
-    return state.geo
+    return state.resources.geo
 }
 
 /// Runs a simulation!
@@ -376,6 +418,35 @@ fn optimize_blueprint(blueprint: &Blueprint, population_size: usize, n_generatio
     return (max_score, outputs)
 }
 
+fn explore_all_branches(iter_hash: &HashSet<State>, push_hash: &mut HashSet<State>, blueprint: &Blueprint) -> u32{
+    let mut max_geo = 0;
+    for state in iter_hash.iter(){
+        let p = make_next_possible_bots(state, blueprint);
+        for s in p.iter(){
+            if s.resources.geo > max_geo{max_geo = s.resources.geo}
+        }
+        push_hash.extend(p.iter())
+    }
+    return max_geo
+}
+
+fn tree_search(blueprint: &Blueprint)->u32{
+    let mut odd_turn_set = HashSet::new();
+    odd_turn_set.insert(START);
+    let mut even_turn_set = HashSet::new();
+    let mut max_geo=0;
+    for minute in 1..25{
+        // if minute > 20{print!("{minute}..")};
+        if minute % 2 == 1{
+            max_geo = explore_all_branches(&odd_turn_set, &mut even_turn_set, blueprint);
+            odd_turn_set.clear()
+        } else{
+            max_geo = explore_all_branches(&even_turn_set, &mut odd_turn_set, blueprint);
+            even_turn_set.clear()
+        }
+    }
+    return max_geo
+}
 
 pub(crate) fn part_1() {
     let mut blueprints = vec![];
@@ -386,23 +457,29 @@ pub(crate) fn part_1() {
             }
         }
     }
-    // let mut state = State{..START};
-    // let int_targets: &[u8] = &[0,1,1,1,2,2,2,2,3,2,3,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3];
-    // let targets = ints_to_bots(int_targets);
-    // let mut purchase_idx = 0usize;
-    //
-    // println!("{:?}",blueprints[0]);
-    // while state.turn < 24{
-    //     (state, purchase_idx) = do_turn(&state, &blueprints[0], &targets, purchase_idx);
-    //     println!("{:?}",state)
-    // }
+    let state = State{
+        turn: 10,
+        resources: Resources{ore:100,cly:100,obs:100,geo:0},
+        bots: Resources{ore:1,cly:0,obs:0,geo:0},
+    };
+/*    let mut state = State{..START};
+    let int_targets: &[u8] = &[0,1,1,1,2,2,2,2,3,2,3,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3];
+    let targets = ints_to_bots(int_targets);
+    let mut purchase_idx = 0usize;
+
+    println!("{:?}",blueprints[0]);
+    while state.turn < 24{
+        (state, purchase_idx) = do_turn(&state, &blueprints[0], &targets, purchase_idx);
+        println!("{:?}",state)
+    }*/
     let mut quality_levels: Vec<u32>= Vec::with_capacity(30);
     for b in blueprints.into_iter(){
-        let (best_score, all_scores) = optimize_blueprint(&b, 5000, 50);
+        // let (best_score, all_scores) = optimize_blueprint(&b, 5000, 50);
+        let best_score = tree_search(&b);
         quality_levels.push(best_score*b.idx);
-        println!("Day {DAY} blueprint {}: {}",b.idx ,best_score);
+        println!("Day {DAY} blueprint {} * {} = {}",b.idx ,best_score, best_score*b.idx);
     }
-    println!("Day {DAY} Part 1: {}", quality_levels.iter().sum::<u32>()); // 1054, 1067, 1101 is too low // 1114 is also wrong
+    println!("Day {DAY} Part 1: {}", quality_levels.iter().sum::<u32>()); // 1054, 1067, 1101 is too low // 1114, 1183 is also wrong
 }
 
 pub(crate) fn part_2() {
