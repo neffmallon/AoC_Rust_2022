@@ -1,6 +1,5 @@
 use std::collections::VecDeque;
 use std::fmt;
-use std::slice::Iter;
 use num::integer::lcm;
 use crate::general_helpers::read_day_input_lines;
 
@@ -47,30 +46,8 @@ impl fmt::Display for Bliz{
     }
 }
 
-#[derive(Clone)]
-struct State{
-    turn: usize,
-    loc: Location,
-}
-
 #[derive(Clone, PartialEq)]
 struct Location{row:usize, col:usize}
-
-#[derive(Clone)]
-enum Movement{
-    Wait,
-    Up,
-    Down,
-    Left,
-    Right,
-}
-
-impl Movement {
-    pub fn iterator() -> Iter<'static, Movement> {
-        static DIRECTIONS: [Movement; 5] = [Movement::Right, Movement::Down, Movement::Wait, Movement::Up, Movement::Left];
-        DIRECTIONS.iter()
-    }
-}
 
 fn get_dimensions()->(usize, usize, usize){
     let mut rows = 0;
@@ -121,16 +98,6 @@ fn rotate_bliz(bliz: &mut Bliz, n: usize){
     }
     bliz.up.rotate_left(col_n);
     bliz.down.rotate_right(col_n);
-}
-
-fn destination(loc: &Location, mov: &Movement, rows: usize, cols: usize) -> Option<Location>{
-    match mov{
-        Movement::Wait => Some(loc.clone()),
-        Movement::Up => if loc.row > 0{Some(Location{row:loc.row-1, .. *loc})} else {None},
-        Movement::Down => if loc.row < rows - 1 {Some(Location{row:loc.row+1, .. *loc})} else {None},
-        Movement::Right => if loc.col < cols - 1 {Some(Location{col:loc.col+1, .. *loc})} else {None},
-        Movement::Left => if loc.col > 0 {Some(Location{col:loc.col-1, .. *loc})} else {None},
-    }
 }
 
 fn destinations(l: &Location, m_r: usize, m_c:usize)->Vec<Location>{
@@ -194,7 +161,7 @@ fn get_length_min_path(bliz: &mut Bliz, forward: bool)->u32{
             if is_not_clear(bliz, start.row, start.col){
                 time_map[time_idx][start.row][start.col] = WALL;
             } else {
-                time_map[time_idx][start.row][start.col] == current_turn;
+                time_map[time_idx][start.row][start.col] = current_turn;
                 if current_turn%2 == 0{
                     odd_check.push(start.clone())
                 } else {even_check.push(start.clone())}
