@@ -9,6 +9,7 @@ debug = 1
 
 [dependencies]
 colored = "2.1.0"
+num = "0.4.1"
 petgraph = "0.6.4"
 rand = "0.8.5"
 regex = "1.10.3"
